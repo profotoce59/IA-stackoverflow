@@ -1,4 +1,4 @@
-# PROJET DE PRÉDICTION DES LABELS STACKOVERFLOW
+# Projet de prédiction de labels stackoverflow.
 
 Dans ce projet nous avons dans un premier temps récupérer plusieurs centaines de posts provenant du forum stackoverflow grâce à l'API de stackexchange. Nous avons communiquer avec l'API en utilisant un script javascript.
 Dans un deuxième temps nous avons dû nettoyer la donnée. C'est à dire, enlever la ponctuation inutile, les mots inutile (mots liant, certains verbe qui ne permettent pas de prédire le sujet du commentaire.)
