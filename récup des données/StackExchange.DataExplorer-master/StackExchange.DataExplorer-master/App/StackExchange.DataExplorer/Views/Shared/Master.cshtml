@@ -1,0 +1,115 @@
+﻿@using StackExchange.DataExplorer
+@using StackExchange.DataExplorer.Models
+@using System.Web.Optimization;
+<!DOCTYPE html>
+<html>
+<head>
+    @{Site site = Current.Controller.Site;}
+    <title>@Html.Raw((string)ViewData["PageTitle"])</title>
+    @if (site != null && AppSettings.EnableOdata)
+    {
+        @Html.Raw(string.Format("<link rel=\"odata.service\" title=\"{0} OData Endpoint\" href=\"{1}\"/>", site.LongName, site.ODataEndpoint))
+    }
+
+    @Styles.Render("~/assets/css/master")
+    @RenderSection("AdditionalStyles", required: false)
+    @Scripts.Render("~/assets/js/jquery")
+    @Scripts.Render("~/assets/js/master")
+    @StackExchange.Profiling.MiniProfiler.RenderIncludes()
+
+    <script>
+        DataExplorer.init({
+            'User.id': @(Current.User.IsAnonymous ? "null" : Current.User.Id.ToString()),
+            'User.guessedID': null,
+            'User.hideSchema': @Current.User.HideSchema.ToString().ToLower(),
+            'User.isAuthenticated': @((!Current.User.IsAnonymous).ToString().ToLower()),
+            'Site.id': @(Current.Controller.Site != null ? Current.Controller.Site.Id.ToString() : "null"),
+            'WhitelistEnabled': @(AppSettings.EnableWhiteList.ToString().ToLower())
+        });
+    </script>
+</head>
+<body>
+    <div id="topbar">
+        <div class="page">
+            <div class="network-items">
+                <a href="//stackexchange.com">Stack Exchange</a>
+            </div>
+            <div class="topbar-links">
+            @if (Request.IsAuthenticated)
+            {
+                <a href="/users/@Current.User.ProfilePath" class="my-profile">@Current.User.Login</a>
+            }
+                <span class="navigation-links">
+                @if (Request.IsAuthenticated)
+                {
+                    <a href="/account/logout">log out</a>
+                    if (Current.User.IsAdmin)
+                    { 
+                    <a href="/admin">mod</a>
+                    }
+                }
+                else
+                {
+                    <a href="/account/login?returnurl=@Request.RawUrl">log in</a>
+                }
+                    <a href="/help">help</a>
+                </span>
+                <div class="search-form">
+                    <form method="GET" action="/@site.TinyName.ToLower()/queries">
+                        @Html.TextBox("q", "", new { id = "q", tabindex = 1, maxlength = 80, size = 28, placeholder = "search" })
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="page">
+        <div id="header">
+            <a id="logo" href="/" title="Stack Exchange Data Explorer">Stack Exchange Data Explorer</a>
+            @Html.Partial("Menu", ViewData["Menu"])
+            <script>
+                DataExplorer.initComposeButton({
+                    IconUrl: '@Current.Controller.Site.IconUrl',
+                    LongName: '@Current.Controller.Site.LongName'
+                });
+            </script>
+        </div>
+        @Html.Partial("SubHeader", ViewData["Header"])
+        @RenderBody()
+        @RenderSection("SecondaryContent", required: false)
+    </div>
+    <div id="footer">
+        <div class="footerwrap">
+            <div id="footer-menu">
+                <a href="/about">help</a>
+                <a href="https://stackexchange.com/sites">sites</a>
+                <a href="https://stackoverflow.blog/">blog</a>
+                <a href="https://chat.stackexchange.com/rooms/13526/sede-stack-exchange-data-explorer">chat</a>
+                <a href="https://data.stackexchange.com">data</a>
+                <a href="https://stackexchange.com/legal">legal</a>
+                <strong><a href="https://meta.stackexchange.com/contact">contact us</a></strong>
+                <strong><a href="https://meta.stackexchange.com">feedback</a></strong>
+            </div>
+            <div id="copyright">
+                Site design / logo &copy; @DateTime.UtcNow.Year Stack Exchange Inc; 
+                user contributions licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/" rel="license">cc by-sa</a>; see the <a href="https://stackoverflow.com/help/licensing">licensing help page</a> for more info
+            </div>
+            <div id="revision">rev @GlobalApplication.AppRevision</div>
+        </div>
+    </div>
+    @if (HttpContext.Current.IsDebuggingEnabled)
+    {
+        <div title="Debugging is enabled" style="position: fixed; right: 0; top: 0; background-color: #E8272C; color: #F7F7F7; padding: 6px; padding-top: 8px; font-size: 18px; text-align: center;">
+            <i class="icon-wrench"></i>
+            @if (Current.User.IsAdmin)
+            {
+                <a style="display: block; background-color: #F7F7F7; color: #E8272C; margin: -6px; margin-top: 8px; padding: 6px;" href="/admin/errors" title="View error log"><i class="icon-bell"></i></a>
+            }
+        </div>
+    }
+    <noscript>
+        <div id="noscript-warning">
+            Data Explorer works best with JavaScript enabled</div>
+    </noscript>
+    @Html.Raw(Current.GoogleAnalytics)
+</body>
+</html>

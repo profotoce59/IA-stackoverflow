@@ -1,0 +1,54 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="CompileWeb" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <!-- Passed in Parameters -->
+    <configuration></configuration>
+    <workingDir></workingDir>
+    <connectionString></connectionString>
+    <readerConnectionString></readerConnectionString>
+    <TargetsDirectory></TargetsDirectory>
+
+    <WebSourceDirectory>$(workingDir)\App\StackExchange.DataExplorer</WebSourceDirectory>
+    <WebConfigPath>$(WebSourceDirectory)\..\StackExchange.DataExplorer\Web.config</WebConfigPath>
+    <MigrationsDirectory>$(workingDir)\Migrations</MigrationsDirectory>
+    <MigrateBin>$(workingDir)\Build\Migrator.exe --connection="$(connectionString)"</MigrateBin>
+  </PropertyGroup>
+
+  <Import Project="$(TargetsDirectory)\MSBuild.Community.Tasks.Targets"/>
+  <Target Name="MigrateDatabase">
+    <Exec Command="$(MigrateBin)" WorkingDirectory="$(MigrationsDirectory)" />
+    <Message Text="MigrateDatabase complete"/>
+  </Target>
+
+  <Target Name="ReplaceConfigs" DependsOnTargets="MigrateDatabase">
+    <!-- Replace the AppConnection -->
+    <FileUpdate
+        Files="$(WebConfigPath)"
+        Regex="name=&quot;AppConnection&quot; connectionString=.*"
+        ReplacementText="name=&quot;AppConnection&quot; connectionString=&quot;$(connectionString)&quot; providerName=&quot;System.Data.SqlClient&quot; /&gt;"
+        />
+    <!-- Replace the ReaderConnection -->
+    <FileUpdate
+        Files="$(WebConfigPath)"
+        Regex="name=&quot;ReaderConnection&quot; connectionString=.*"
+        ReplacementText="name=&quot;ReaderConnection&quot; connectionString=&quot;$(readerConnectionString)&quot; /&gt;"
+        />
+    <!-- Always turn off web app debug setting -->
+    <FileUpdate
+        Files="$(WebConfigPath)"
+        Regex="compilation debug=&quot;true&quot;"
+        ReplacementText="compilation debug=&quot;false&quot;"
+        />
+    <Message Text="ReplaceConfigs complete"/>
+  </Target>
+
+
+  <Target Name="CompileWeb" DependsOnTargets="ReplaceConfigs">
+
+    <MSBuild Projects="$(WebSourceDirectory)\..\StackExchange.DataExplorer\StackExchange.DataExplorer.csproj"
+             Properties="Configuration=$(configuration);ReferencePath=$(WebSourceDirectory)\bin"
+             Targets="Build"/>
+
+    <Message Text="CompileWeb complete" />
+  </Target>
+</Project>

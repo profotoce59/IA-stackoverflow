@@ -1,0 +1,41 @@
+﻿@model QuerySetViewModel
+@using StackExchange.DataExplorer;
+@using StackExchange.DataExplorer.Helpers;
+@using StackExchange.DataExplorer.ViewModel;
+
+<div id="history" class="right-group">
+    <span class="heading">Revisions</span>
+    <ul>
+    @if (Model != null && Model.Revisions != null && Model.Revisions.FirstOrDefault() != null)
+    {
+        var history = Model.Revisions.ToArray();
+        int? selectedRevisionId = Model.CurrentRevision != null ? Model.CurrentRevision.Id : (int?)null;
+
+        foreach (var revision in history.Reverse())
+        {
+            <li id="revision-@revision.Id" class="revision@(revision.Id == selectedRevisionId ? " selected" : "")">
+                <a class='revision' href="/@Current.Controller.Site.TinyName.ToLower()/revision/@Model.QuerySet.Id/@revision.Id@Model.QuerySet.Slugify()" title="@revision.Query.QueryBody">
+                    <span class="revision-info" title="">@revision.Id</span>
+                </a>
+
+                @if (revision.Owner.IsAnonymous)
+                {
+                    <span class='user'>anonymous</span> 
+                }
+                else
+                { 
+                    <a class='user' href="/users/@revision.Owner.Id">@revision.Owner.Login</a>
+                }
+
+                @Html.Raw(revision.CreationDate.ToRelativeTimeSpanMini())
+
+                <div style="clear:both"></div>
+            </li>
+        }
+    }
+    else
+    {
+        <li class="empty">Waiting for you to make your first edit&hellip;</li>
+    }
+    </ul>
+</div>

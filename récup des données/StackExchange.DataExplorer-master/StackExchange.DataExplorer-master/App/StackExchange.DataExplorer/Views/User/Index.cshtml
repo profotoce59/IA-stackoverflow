@@ -1,0 +1,39 @@
+﻿@model StackExchange.DataExplorer.Helpers.PagedList<StackExchange.DataExplorer.Models.User>
+@using StackExchange.DataExplorer
+
+@{ this.SetPageTitle("Users - Stack Exchange Data Explorer"); }
+
+<div id="user-filter">
+    <label>Type to find users:</label> <input type="text" name="search" autocomplete="off" value="@Html.Raw(Html.AttributeEncode(ViewData["SearchUser"]))" />
+</div>
+<div id="user-search">
+    @Html.Partial("UserList", Model)
+</div>
+<script>
+    (function () {
+        var users = $('#user-search'),
+            filter = new DataExplorer.DeferredRequest({
+                delay: 500,
+                type: 'get',
+                force: false,
+                url: '@ViewData["SearchHref"]',
+                callback: function (data) {
+                    users.html(data);
+                }
+            }),
+            lastValue = null,
+            search = $('#user-filter > input[name="search"]').on('keydown paste', function () {
+                filter.request(function () {
+                    var value = search.val();
+
+                    if ((value.length && value.length < 3) || (value == lastValue)) {
+                        filter.cancel();
+                    } else {
+                        lastValue = value;
+                    }
+
+                    return { search: value };
+                });
+            });
+    })();
+</script>

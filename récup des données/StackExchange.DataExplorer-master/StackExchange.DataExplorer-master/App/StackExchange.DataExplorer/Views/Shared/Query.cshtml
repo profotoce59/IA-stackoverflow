@@ -1,0 +1,123 @@
+﻿@using StackExchange.DataExplorer
+@using StackExchange.DataExplorer.Helpers
+@using System.Web.Optimization
+@{
+    Layout = "~/Views/Shared/Master.cshtml";
+
+    var results = ViewData["cached_results"] as QueryResults;
+    string cache;
+    
+    if (results == null) {
+        cache = "";   
+    } else {
+        cache = results.ToJson().Replace("/", "\\/");
+    }
+    
+    var site = Current.Controller.Site;
+}
+
+@section AdditionalStyles
+{
+    @Styles.Render("~/assets/css/query")
+}
+
+<div id="query">
+    <form id="runQueryForm" action="/query/@ViewData["query_action"]" method='post'>
+        <div id="metadata">
+            <div class="info">
+                @RenderSection("Metadata")
+            </div>
+            @Html.Partial("AboutSite")
+            <div class="clear"></div>
+        </div>
+        @RenderBody()
+        <div id="query-params">
+            <h3>Enter Parameters</h3>
+        </div>
+        <div id="query-options">
+            <button id="submit-query" class="btn-normal" type="submit">Run Query</button>
+            @if (AppSettings.EnableCancelQuery)
+            {
+            <button id="cancel-query" class="btn-normal" type="button" disabled>Cancel</button>
+            }
+            <span class="options">
+                Options:
+                <label title="Return results in text format"><input type="checkbox" name="textResults" value="true" />Text-only results</label>
+                <label title="Include the execution plan for this query in the results"><input type="checkbox" name="withExecutionPlan" value="true" />Include execution plan</label>
+                @if (AppSettings.EnableBypassCache)
+                {
+                <label title="Ignore previously cached results"><input type="checkbox" name="bypassCache" value="true" />Bypass cache</label>
+                }
+            @if (AppSettings.AllowRunOnAllDbsOption)
+            {
+                <label title="Targe sites">Run on: 
+                <select name="targetSites">
+                    <option selected value="Current">This Site</option>
+                    <option value="AllSites">All Sites</option>
+                    <option value="AllMetaSites">All Meta Sites</option>
+                    <option value="AllNonMetaSites">All Non-Meta Sites</option>
+                    <option value="AllMetaSitesButMSE">All Meta Sites but MSE</option>
+                    <option value="AllNonMetaSitesButSO">All Non-Meta Sites but SO</option>
+                </select>
+                </label>
+            }
+            </span>
+        </div>
+    @if(Captcha.IsShownForCurrentUser())
+    {
+        <script src="https://www.google.com/recaptcha/api.js"></script>
+        <div id="captcha" class="g-recaptcha" data-sitekey="@AppSettings.RecaptchaPublicKey" style="display: none"></div>
+    }
+        <div class="clear"></div>
+    </form>
+    <div id="site-selector" class="result-option">
+        Switch @(site.RelatedSite == null ? "sites" : (site.ParentId == null) ? "to meta site" : "to main site"  )
+            <ul>
+                @if (site.RelatedSite != null)
+                {
+                    <li class="site-selector-related">
+                        <a class="site templated @(site.SharesUsers(site.RelatedSite) ? "related-site" : "")" href="/@site.RelatedSite.TinyName.ToLower()/query/:id:slug:params" title="View results on @site.RelatedSite.LongName">
+                            <img class="site-icon" src="@site.RelatedSite.IconUrl" alt="@site.RelatedSite.LongName" />
+                        </a>
+                    </li>
+                }
+                <li>
+                    <input id="switch-sites" type="text" size="24" placeholder="search by name or url" />
+                </li>
+            </ul>
+            <div class="clear"></div>
+        </div>
+    <div id="loading">
+        <img src="//cdn.sstatic.net/img/progress-dots.gif" alt="loading" /> Hold tight while we fetch your results
+    </div>
+    <div id="error-message" class="error-message"></div>
+    <div id="query-results" class="result-option">
+        <div class="subheader">
+            <div class="group">
+                <div class="miniTabs">
+                    <a id="resultSetsTab" class="optional" href="#resultSets">Results<span class="tab-counter" title="Change result set">[:current/:total]</span></a>
+                    <a id="messagesTab" href="#messages">Messages</a>
+                    <a id="graphTab" class="optional" href="#graph">Graph</a>
+                    <a id="executionPlanTab" class="optional" href="#executionPlan">Execution Plan</a>
+                </div>
+                <a id="resultSetsButton" class="download-button templated" title="Download results as CSV" href="/:site/:targetsites;csv/:revisionid:params">Download CSV</a>
+                <a id="executionPlanButton" class="download-button templated" title="Download execution plan as XML" href="/:site/:targetsites;plan/:revisionid:params">Download XML</a>
+            </div>
+        </div>
+        <div id="resultSets" class="panel"></div>
+        <pre id="messages" class="panel"><code></code></pre>
+        <div id="executionPlan" class="panel"></div>
+        <div id="graph" class="panel"></div>
+        <div id="execution-stats">:records returned in :time ms:cached</div>
+    </div>
+</div>
+@Scripts.Render("~/assets/js/query")
+<script>
+    DataExplorer.ready(function () {
+        if (loadCachedResults) {
+            loadCachedResults(@(Html.Raw(cache)));
+        }
+    });
+
+    DataExplorer.SiteSwitcher.init('#switch-sites', '/:site/query/:id:slug:params');
+</script>

@@ -1,0 +1,16 @@
+﻿@model StackExchange.DataExplorer.ViewModel.QuerySetVoting
+
+<div id="query-voting">
+    <span title="" class="star-@(Model.HasVoted?"on":"off")"></span>
+    <div class="favoritecount"><strong class="@(Model.HasVoted?"favoritecount-selected":"")">@Model.TotalVotes</strong></div>
+    <div class="error-notification supernovabg">
+        <h2>
+            Please <a href="/account/login?returnurl=@Request.RawUrl">login or register</a> to vote for this query.</h2>
+        (click on this box to dismiss)
+    </div>
+    <script>
+        DataExplorer.ready(function () {
+            DataExplorer.Voting.init('#query-voting', @(Model.QuerySetId), @(Model.HasVoted.ToString().ToLower()), @(Model.ReadOnly.ToString().ToLower()));
+        });
+    </script>
+</div>

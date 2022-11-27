@@ -1,0 +1,19 @@
+﻿@model Recaptcha.RecaptchaControl
+
+<div id="captcha" style="display:none;">
+    <h4>To avoid spam queries, all anonymous users must solve a captcha</h4>
+    <div>
+       @{
+           System.Text.StringBuilder sb = new System.Text.StringBuilder();
+           HtmlTextWriter writer = new HtmlTextWriter(new System.IO.StringWriter(sb));
+           Model.RenderControl(writer);
+           var r = sb.ToString();
+           
+       } 
+       @Html.Raw(r)
+    </div>
+    <div class="error-message">
+        <strong>Whoops!</strong> Looks like you didn't get the captcha quite right, please try again.
+    </div>
+    <button class="btn-normal" type="submit">I'm a Human Being!</button>
+</div>
